@@ -1,0 +1,22 @@
+{
+  "name": "tms-api",
+  "version": "1.0.0",
+  "description": "Employee, Project, Timesheet Manager for company",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://muralikrishnat@github.com/muralikrishnat/tms-api.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/muralikrishnat/tms-api/issues"
+  },
+  "homepage": "https://github.com/muralikrishnat/tms-api#readme",
+  "dependencies": {
+    "pg": "^6.1.5"
+  }
+}
