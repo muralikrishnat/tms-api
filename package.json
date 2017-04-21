@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/muralikrishnat/tms-api#readme",
   "dependencies": {
-    "pg": "^6.1.5"
+    "pg": "^6.1.5",
+    "restify": "^4.3.0"
   }
 }
