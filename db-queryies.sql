@@ -117,3 +117,7 @@ CREATE TABLE timesheets
     timesheetdate timestamp with time zone
 );
 
+
+-- To Add root user in DB
+insert into employee (username, lastname, empid, password, emailid, reportingmanger, role)
+values ('admin', 'admin', '1', 'admin', 'admin', 0, 'admin');
