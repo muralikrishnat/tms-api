@@ -257,7 +257,7 @@ server.post('/echo/:name', function (req, res, next) {
 });
 
 var defaultHandler = function (req, res, next) {
-    res.send({ 'Build Number ': '0.1.11' });
+    res.send({ 'Build Number ': '0.1.12' });
     return next();
 };
 server.get('/', defaultHandler);
