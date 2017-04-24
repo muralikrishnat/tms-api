@@ -484,7 +484,7 @@ module.exports = {
                         namesArr = [],
                         valuesArr = [];
 
-                    namesArr.push('empid, projectid, isBillable, role, allocationtype');
+                    namesArr.push('empid, projectid, isbillable, role, allocationtype');
                     valuesArr.push(`'${empid}', '${projectid}', '${isbillable}', '${role}', 'active'`);
 
                     if (startdate) {
@@ -508,7 +508,7 @@ module.exports = {
                         if (enddate) {
                             setArr.push(` enddate='${enddate}' `);
                         }
-                        if (isBillable) {
+                        if (isbillable) {
                             setArr.push(` isbillable='${isbillable}'`);
                         }
                     }
@@ -523,7 +523,6 @@ module.exports = {
                         queryToExecute = `delete from employeeprojectallocation where id=${id}`;
                     }
                 }
-                console.log('query to execute ', queryToExecute);
                 client.query(queryToExecute, (err, result) => {
                     done(err);
                     res({ err, result });
