@@ -257,7 +257,7 @@ server.post('/echo/:name', function (req, res, next) {
 });
 
 var defaultHandler = function (req, res, next) {
-    res.send({ 'Build Number ': '0.1.10' });
+    res.send({ 'Build Number ': '0.1.11' });
     return next();
 };
 server.get('/', defaultHandler);
@@ -441,6 +441,17 @@ server.post('/timesheetcomments', (req, res, next) => {
         } else {
             res.send({ err: 'Missing required fields' });
         }
+    } else {
+        res.send({ err: 'Authentication required' });
+    }
+    return next();
+});
+server.get('/timesheetcomments', (req, res, next) => {
+    req.params.loggedUser = req.loggedUser;
+    if (req.loggedUser) {
+        db.selectimesheetcomments(req.params).then(({ err, result }) => {
+            res.send({ err, result });
+        });
     } else {
         res.send({ err: 'Authentication required' });
     }

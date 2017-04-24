@@ -29,6 +29,21 @@ var { getProjects } = require('./controllers/projects');
 var { getHolidays, addHoliday } = require('./controllers/holidays');
 var { addTimesheet, getTimesheet } = require('./controllers/timesheets');
 module.exports = {
+    selectimesheetcomments: () => {
+        return new Promise((res, rej) => {
+            checkAndConnect().then(({ err, client, done }) => {
+                var queryToExecute = 'select * from timesheetcomments';
+                client.query(queryToExecute, (cErr, result) => {
+                    done();
+                    if (!cErr) {
+                        res({ err: cErr, result });
+                    } else {
+                        res({ err: cErr });
+                    }
+                });
+            });
+        });
+    },
     updatetimesheetcomment: ({ loggedUser, timesheetids, comment, commentdate }) => {
         return new Promise((res, rej) => {
             checkAndConnect().then(({ err, client, done }) => {
