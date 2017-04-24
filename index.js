@@ -52,7 +52,8 @@ var {
     deleteEmployee,
     deleteProject,
     updateTimesheet,
-    approveTimesheets
+    approveTimesheets,
+    sendAprovalMail
  } = require('./db');
 var server = restify.createServer();
 server.use(restify.acceptParser(server.acceptable));
@@ -89,7 +90,6 @@ server.use(function (req, res, next) {
                     }
                 }
                 return false;
-
             });
         }
 
@@ -400,6 +400,18 @@ server.get('/logout', function (req, res, next) {
 });
 
 
+server.post('/sendmail', (req, res, next) => {
+    req.params.loggedUser = req.loggedUser;
+    if (req.loggedUser) {
+        sendAprovalMail(req.params).then(({ err, result }) => {
+            res.send({ err, result });
+        });
+    } else {
+        res.send({ err: 'Authentication required' });
+    }
+    return next();
+});
+
 server.opts('/changepassword', (req, res, next) => {
     res.header('Access-Control-Allow-Headers', 'Accept, Content-Type, X-Requested-With, POST');
     res.send(200);
@@ -407,6 +419,34 @@ server.opts('/changepassword', (req, res, next) => {
 });
 
 server.opts('/allocations', (req, res, next) => {
+    res.header('Access-Control-Allow-Headers', 'Accept, Content-Type, X-Requested-With, POST, DELETE, GET');
+    res.send(200);
+    return next();
+});
+server.opts('/sendmail', (req, res, next) => {
+    res.header('Access-Control-Allow-Headers', 'Accept, Content-Type, X-Requested-With, POST, DELETE, GET');
+    res.send(200);
+    return next();
+});
+
+
+var db = require('./db');
+server.post('/timesheetcomments', (req, res, next) => {
+    req.params.loggedUser = req.loggedUser;
+    if (req.loggedUser) {
+        if (req.params.timesheetids) {
+            db.updatetimesheetcomment(req.params).then(({ err, result }) => {
+                res.send({ err, result });
+            });
+        } else {
+            res.send({ err: 'Missing required fields' });
+        }
+    } else {
+        res.send({ err: 'Authentication required' });
+    }
+    return next();
+});
+server.opts('/timesheetcomments', (req, res, next) => {
     res.header('Access-Control-Allow-Headers', 'Accept, Content-Type, X-Requested-With, POST, DELETE, GET');
     res.send(200);
     return next();

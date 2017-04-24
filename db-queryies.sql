@@ -42,6 +42,7 @@ create table employee (
     dob date,
     addedby character varying(150),
     addeddate date,
+    lastloggeddate timestamp with time zone
 );
 
 CREATE TABLE employeeprojectallocation

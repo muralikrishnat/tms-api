@@ -17,6 +17,8 @@
   },
   "homepage": "https://github.com/muralikrishnat/tms-api#readme",
   "dependencies": {
+    "nodemailer": "^4.0.1",
+    "nodemailer-smtp-transport": "^2.7.4",
     "pg": "^6.1.5",
     "restify": "^4.3.0"
   }

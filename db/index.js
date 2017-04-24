@@ -29,6 +29,55 @@ var { getProjects } = require('./controllers/projects');
 var { getHolidays, addHoliday } = require('./controllers/holidays');
 var { addTimesheet, getTimesheet } = require('./controllers/timesheets');
 module.exports = {
+    updatetimesheetcomment: ({ loggedUser, timesheetids, comment, commentdate }) => {
+        return new Promise((res, rej) => {
+            checkAndConnect().then(({ err, client, done }) => {
+                var queryToExecute = '';
+                var commentby = loggedUser.id || 0;
+                if (timesheetids.indexOf(',') > 0) {
+                    var queries = [];
+                    timesheetids.indexOf(',').forEach((r) => {
+                        queries = `
+                        insert into timesheetcomments 
+                            (comment, commentby, commentdate, viewcount, timesheetid)
+                        values 
+                            ('${comment}', ${commentby}, now(), 0, ${r})
+                    `;
+                    });
+                    queryToExecute = queries.join(';');
+                } else {
+                    queryToExecute = `
+                    insert into timesheetcomments 
+                        (comment, commentby, commentdate, viewcount, timesheetid)
+                    values 
+                        ('${comment}', ${commentby}, now(), 0, ${timesheetids})
+                `;
+                }
+                client.query(queryToExecute, (cErr, result) => {
+                    done();
+                    if (!cErr) {
+                        res({ err: cErr, result });
+                    } else {
+                        res({ err: cErr });
+                    }
+                });
+            });
+        });
+    },
+    sendAprovalMail: ({ toAddress, subject, mailContent, textContent }) => {
+        return new Promise((res, rej) => {
+            let mailOptions = {
+                from: '"Timesheet Manager" <muralit.evoke@gmail.com>',
+                to: toAddress || 'mtottimpudi@evoketechnologies.com',
+                subject: subject || 'Timesheet Updation',
+                text: textContent,
+                html: mailContent
+            };
+            require('./mail-manager').sendMail(mailOptions).then(({ err, result }) => {
+                res({ err, result });
+            });
+        });
+    },
     deleteProject: ({ id, loggedUser }) => {
         return new Promise((res) => {
             if (loggedUser.role === 'admin') {
@@ -566,6 +615,7 @@ module.exports = {
         return new Promise((res, rej) => {
             checkAndConnect().then(({ err, client, done }) => {
                 var queryToExec = `update timesheets set `;
+                var mailContent = 'Your timesheet is Updated';
                 if (isapproved) {
                     queryToExec = queryToExec + ` isapproved=true, declinedcount=0 `;
                 } else {
@@ -576,6 +626,16 @@ module.exports = {
                     done();
                     if (!cErr) {
                         if (result.rowCount) {
+
+                            // let mailOptions = {
+                            //     from: '"Timesheet Manager" <muralit.evoke@gmail.com>',
+                            //     to: 'mtottimpudi@evoketechnologies.com',
+                            //     subject: 'Timesheet Updation',
+                            //     text: mailContent,
+                            //     html: '<b>'+ mailContent +'</b>'
+                            // };
+                            // require('./mail-manager').sendMail(mailOptions);
+                            console.log('results ', result);
                             res({ err: cErr, result: "" });
                         } else {
                             res({ err: { code: 601, msg: 'Updation failed' } });
