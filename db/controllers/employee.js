@@ -73,7 +73,10 @@ module.exports = {
                 namesArr.push('addeddate');
                 valuesArr.push(`'${addeddate}'`);
             }
-            insertQuery = insertQuery + ' (' + namesArr.join(',') + ') values (' + valuesArr.join(',') + ');';
+            insertQuery = insertQuery + ' (' + namesArr.join(',') + ') values (' + valuesArr.join(',') + '); ';
+            insertQuery = insertQuery + ` 
+                insert into employeeprojectallocation (empid, projectid) values ('${empid}', '1')
+            `;
             client.query(insertQuery, (err, result) => {
                 res({ err, result });
             });

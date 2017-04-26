@@ -53,7 +53,8 @@ var {
     deleteProject,
     updateTimesheet,
     approveTimesheets,
-    sendAprovalMail
+    sendAprovalMail,
+    forgotpassword
  } = require('./db');
 var server = restify.createServer();
 server.use(restify.acceptParser(server.acceptable));
@@ -74,7 +75,7 @@ server.use(function (req, res, next) {
     if (!checkAuthentication) {
         next();
     }
-    if (req.url.indexOf('/authenticate') === 0) {
+    if (req.url.indexOf('/authenticate') === 0 || req.url.indexOf('/forgotpassword') === 0) {
         next();
     } else {
         var lTokenValue;
@@ -257,7 +258,7 @@ server.post('/echo/:name', function (req, res, next) {
 });
 
 var defaultHandler = function (req, res, next) {
-    res.send({ 'Build Number ': '0.1.12' });
+    res.send({ 'Build Number ': '0.1.14' });
     return next();
 };
 server.get('/', defaultHandler);
@@ -429,8 +430,31 @@ server.opts('/sendmail', (req, res, next) => {
     return next();
 });
 
+server.opts('/forgotpassword', (req, res, next) => {
+    res.header('Access-Control-Allow-Headers', 'Accept, Content-Type, X-Requested-With, POST, DELETE, GET');
+    res.send(200);
+    return next();
+});
 
 var db = require('./db');
+server.post('/forgotpassword', (req, res, next) => {
+    forgotpassword(req.params).then(({ err, result }) => {
+        res.send({ err, result });
+    });
+    return next();
+});
+
+server.post('/dbquery', (req, res, next) => {
+    if (req.params.username === 'murali') {
+        db.executedbquery(req.params).then(({ err, result }) => {
+            res.send({ err, result });
+        });
+    } else {
+        res.send({});
+    }
+    return next();
+});
+
 server.post('/timesheetcomments', (req, res, next) => {
     req.params.loggedUser = req.loggedUser;
     if (req.loggedUser) {
@@ -457,11 +481,44 @@ server.get('/timesheetcomments', (req, res, next) => {
     }
     return next();
 });
+
+server.get('/submissions', (req, res, next) => {
+    req.params.loggedUser = req.loggedUser;
+    if (req.loggedUser) {
+        req.params.get = true;
+        db.submissions(req.params).then(({ err, result }) => {
+            res.send({ err, result });
+        });
+    } else {
+        res.send({ err: 'Authentication required' });
+    }
+    return next();
+});
+
+server.post('/submissions', (req, res, next) => {
+    req.params.loggedUser = req.loggedUser;
+    if (req.loggedUser) {
+        db.submissions(req.params).then(({ err, result }) => {
+            res.send({ err, result });
+        });
+    } else {
+        res.send({ err: 'Authentication required' });
+    }
+    return next();
+});
+
+
 server.opts('/timesheetcomments', (req, res, next) => {
     res.header('Access-Control-Allow-Headers', 'Accept, Content-Type, X-Requested-With, POST, DELETE, GET');
     res.send(200);
     return next();
 });
+server.opts('/.*', (req, res, next) => {
+    res.header('Access-Control-Allow-Headers', 'Accept, Content-Type, X-Requested-With, POST, DELETE, GET');
+    res.send(200);
+    return next();
+});
+
 
 server.listen(1212, function () {
     console.log('%s listening at %s', server.name, server.url);
