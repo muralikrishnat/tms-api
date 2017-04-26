@@ -97,7 +97,7 @@ server.use(function (req, res, next) {
         if (lTokenValue && isAuthenticatedToken(lTokenValue, req)) {
             next();
         } else {
-            next(new restify.UnauthorizedError({ body: { err: "Unauthorized", msg: "Unauthorized Error" } }));
+            next(new restify.UnauthorizedError({ body: { err: "Unauthorized", msg: "Unauthorized Error", version: '0.1.16' } }));
         }
     }
 
