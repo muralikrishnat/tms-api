@@ -1,6 +1,6 @@
 // require('./fe-server')({ fePort: 3434, folder: 'ui' });
 var loggedUsers = [];
-var version = '0.1.17';
+var version = '0.1.18';
 var getTimeStamp = function () {
     function s4() {
         return Math.floor((1 + Math.random()) * 0x10000)
