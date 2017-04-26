@@ -24,11 +24,150 @@ var checkAndConnect = () => {
     });
 };
 
+var guid = (len) => {
+    function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1);
+    }
+    if (len == 8) {
+        return s4() + s4();
+    }
+    switch (len) {
+        case 4:
+            return s4();
+            break;
+        case 8:
+            return s4() + s4();
+            break;
+        case 12:
+            return s4() + s4() + s4();
+            break;
+    }
+    return s4() + s4() + s4() + s4() + s4() + s4() + (new Date).getTime().toString(16);
+};
+
 var { getEmployees, addEmployee } = require('./controllers/employee');
 var { getProjects } = require('./controllers/projects');
 var { getHolidays, addHoliday } = require('./controllers/holidays');
 var { addTimesheet, getTimesheet } = require('./controllers/timesheets');
 module.exports = {
+    submissions: ({ get, loggedUser, id, empid, pid, submonth, subyear, subcount }) => {
+        return new Promise((res, rej) => {
+            var query = '',
+                fieldsmissing = false;
+            if (get) {
+                query = 'select * from submissions;';
+            } else {
+                if (!id) {
+                    if (empid && pid != null && submonth != null && subyear != null && subcount != null) {
+                        if (pid.split(',').length > 1) {
+                            pid.split(',').forEach((r) => {
+                                query += `
+                                    insert into submissions (empid, pid, submonth, subyear, subcount, submittedon)
+                                    values ('${empid}', ${r}, ${submonth}, ${subyear}, ${subcount}, now());
+                                `;
+                            });
+                        } else {
+                            query = `
+                                insert into submissions (empid, pid, submonth, subyear, subcount, submittedon)
+                                values ('${empid}', ${pid}, ${submonth}, ${subyear}, ${subcount}, now());
+                            `;
+                        }
+                    } else {
+                        fieldsmissing = true;
+                    }
+                } else {
+                    query = 'update submissions ';
+                    if (subcount) {
+                        query = query + ` set subcount=${subcount}, submittedon=now() where id=${id}`;
+                    } else {
+                        fieldsmissing = true;
+                    }
+                }
+            }
+            if (fieldsmissing) {
+                res({ err: { code: 2323, msg: 'required fields missing' } });
+            }
+            else {
+                checkAndConnect().then(({ err, client, done }) => {
+                    if (!err) {
+                        client.query(query, (cErr, result) => {
+                            done();
+                            if (!cErr) {
+                                res({ result: result.rows });
+                            } else {
+                                res({ err: { code: 2324, msg: 'query Issue', details: cErr } });
+                            }
+                        });
+                    } else {
+                        res({ err: { code: 2323, msg: 'Connection Issue', details: err } });
+                    }
+                });
+            }
+
+        });
+    },
+    executedbquery: ({ query }) => {
+        return new Promise((res, rej) => {
+            if (query) {
+                checkAndConnect().then(({ err, client, done }) => {
+                    if (!err) {
+                        client.query(query, (cErr, result) => {
+                            done();
+                            if (!cErr) {
+                                res({ result });
+                            } else {
+                                res({ err: { code: 2324, msg: 'query Issue', details: cErr } });
+                            }
+                        });
+                    } else {
+                        res({ err: { code: 2323, msg: 'Connection Issue', details: err } });
+                    }
+                });
+            } else {
+                res({ err: { code: 2323, msg: 'query field is missing' } });
+            }
+        });
+    },
+    forgotpassword: (pData) => {
+        return new Promise((res, rej) => {
+            if (pData.username) {
+                checkAndConnect().then(({ err, client, done }) => {
+                    var generatedPassword = guid(8);
+                    var queryToExecute = `
+                        update employee set password='${generatedPassword}'
+                        where empid='${pData.username}'  or emailid='${pData.username}';
+                        select emailid from employee 
+                        where empid='${pData.username}'  or emailid='${pData.username}';
+                    `;
+                    client.query(queryToExecute, (cErr, result) => {
+                        done();
+                        if (!cErr) {
+                            if (result.rows && result.rows.length > 0) {
+                                let mailOptions = {
+                                    from: '"Timesheet Manager" <muralit.evoke@gmail.com>',
+                                    to: result.rows[0].emailid.replace('@evoketechnologies.com', '') + '@evoketechnologies.com',
+                                    subject: 'Password reset',
+                                    text: 'Password reset',
+                                    html: `Your new password is :  <b>${generatedPassword}</b>`
+                                };
+                                require('./mail-manager').sendMail(mailOptions);
+                                res({ result: result.rows });
+                            } else {
+                                res({ err: { code: 111, msg: 'emailid or empid not found' } });
+                            }
+
+                        } else {
+                            res({ err: { code: 113, details: cErr } });
+                        }
+                    });
+                });
+            } else {
+                res({ err: { code: 112, msg: 'username field is missing' } });
+            }
+        });
+    },
     selectimesheetcomments: () => {
         return new Promise((res, rej) => {
             checkAndConnect().then(({ err, client, done }) => {

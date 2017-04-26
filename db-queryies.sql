@@ -1,3 +1,4 @@
+drop table businessunit;
 create table businessunit (
     id serial primary key not null,
     name varchar(100),
@@ -5,12 +6,13 @@ create table businessunit (
     addeddate date
 );
 
-
+drop table designation;
 create table designation (
     id serial primary key not null,
     name varchar(100)
 );
 
+drop table emergencycontacts;
 create table emergencycontacts (
     id serial primary key not null,
     name varchar(150),
@@ -20,11 +22,12 @@ create table emergencycontacts (
     empid int
 );
 
+drop table employee;
 create table employee (
     id serial primary key not null,
     firstname varchar(150),
     lastname varchar(150),
-    empid varchar(150),
+    empid varchar(150) unique,
     password varchar(150),
     personalemailid varchar(150),
     emailid varchar(150),
@@ -37,14 +40,16 @@ create table employee (
     jobgrade character varying(150),
     department character varying(150),
     doj date,
-    location character varying(150) ,
-    address text ,
+    location character varying(150),
+    address text,
     dob date,
     addedby character varying(150),
     addeddate date,
     lastloggeddate timestamp with time zone
 );
 
+
+drop table employeeprojectallocation;
 CREATE TABLE employeeprojectallocation
 (
     id serial primary key not null,
@@ -57,7 +62,7 @@ CREATE TABLE employeeprojectallocation
     allocationtype character varying(100)
 );
 
-
+drop table holidays;
 CREATE TABLE holidays
 (
     id serial primary key not null,
@@ -67,6 +72,7 @@ CREATE TABLE holidays
 );
 
 
+drop table practise;
 CREATE TABLE practise
 (
     id serial primary key not null,
@@ -74,10 +80,11 @@ CREATE TABLE practise
 );
 
 
+drop table projects;
 CREATE TABLE projects
 (
     id serial primary key not null,
-    name character varying(100) ,
+    name character varying(100) unique,
     businessid integer,
     expectedstartdate date,
     expectedenddate date,
@@ -85,6 +92,7 @@ CREATE TABLE projects
     actualenddate date
 );
 
+drop table tasks;
 CREATE TABLE tasks
 (
     id serial primary key not null,
@@ -92,6 +100,7 @@ CREATE TABLE tasks
     expectedwork character varying(20)
 );
 
+drop table timesheetcomments;
 CREATE TABLE timesheetcomments
 (
     id serial primary key not null,
@@ -101,6 +110,8 @@ CREATE TABLE timesheetcomments
     viewcount numeric,
     timesheetid numeric
 );
+
+drop table timesheets;
 CREATE TABLE timesheets
 (
     id serial primary key not null,
@@ -118,6 +129,20 @@ CREATE TABLE timesheets
 );
 
 
+drop table submissions;
+create table submissions (
+	id serial primary key,
+    empid varchar(150),
+    pid	numeric,
+    submonth numeric,
+    subyear numeric,
+    subcount numeric,
+    submittedon timestamp with time zone
+);
+
 -- To Add root user in DB
-insert into employee (username, lastname, empid, password, emailid, reportingmanger, role)
+insert into employee (firstname, lastname, empid, password, emailid, reportingmanger, role)
 values ('admin', 'admin', '1', 'admin', 'admin', 0, 'admin');
+
+insert into projects (name)
+values ('Non Billing (On Leave)');
