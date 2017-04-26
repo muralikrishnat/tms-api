@@ -1,5 +1,6 @@
 // require('./fe-server')({ fePort: 3434, folder: 'ui' });
 var loggedUsers = [];
+var version = '0.1.17';
 var getTimeStamp = function () {
     function s4() {
         return Math.floor((1 + Math.random()) * 0x10000)
@@ -97,7 +98,7 @@ server.use(function (req, res, next) {
         if (lTokenValue && isAuthenticatedToken(lTokenValue, req)) {
             next();
         } else {
-            next(new restify.UnauthorizedError({ body: { err: "Unauthorized", msg: "Unauthorized Error", version: '0.1.16' } }));
+            next(new restify.UnauthorizedError({ body: { err: "Unauthorized", msg: "Unauthorized Error", version } }));
         }
     }
 
