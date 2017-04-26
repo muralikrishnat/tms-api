@@ -1,6 +1,6 @@
 // require('./fe-server')({ fePort: 3434, folder: 'ui' });
 var loggedUsers = [];
-var version = '0.1.19';
+var version = '0.1.20';
 var getTimeStamp = function () {
     function s4() {
         return Math.floor((1 + Math.random()) * 0x10000)
@@ -521,7 +521,7 @@ server.opts('/.*', (req, res, next) => {
 });
 
 
-server.listen(1213, function () {
+server.listen(1212, function () {
     console.log('%s listening at %s', server.name, server.url);
 });
 
