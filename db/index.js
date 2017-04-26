@@ -516,6 +516,7 @@ module.exports = {
         });
     },
     addProject: ({
+        id,
         name,
         businessid = 0,
         expectedstartdate,
@@ -531,7 +532,8 @@ module.exports = {
                     if (!err) {
                         var insertQuery = 'insert into projects',
                             namesArr = [],
-                            valuesArr = [];
+                            valuesArr = [],
+                            queryToExecute = '';
                         namesArr.push('name, businessid');
                         valuesArr.push(`'${name}',${businessid}`);
                         if (expectedstartdate) {
@@ -550,8 +552,17 @@ module.exports = {
                             namesArr.push('actualenddate');
                             valuesArr.push(`'${actualenddate}'`);
                         }
-                        insertQuery = insertQuery + ' (' + namesArr.join(',') + ') values (' + valuesArr.join(',') + ')';
-                        client.query(insertQuery, (cErr, result) => {
+                        queryToExecute = insertQuery + ' (' + namesArr.join(',') + ') values (' + valuesArr.join(',') + ')';
+                        if (id) {
+                            queryToExecute = `update projects 
+                                            set 
+                                                name='${name}',
+                                                actualstartdate='${actualstartdate}'
+                                                actualenddate='${actualenddate}'
+                                                where id=${id} ;
+                                            `;
+                        }
+                        client.query(queryToExecute, (cErr, result) => {
                             done();
                             if (!cErr) {
                                 res({ err: cErr, result });
