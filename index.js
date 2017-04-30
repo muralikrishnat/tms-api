@@ -1,6 +1,6 @@
 // require('./fe-server')({ fePort: 3434, folder: 'ui' });
 var loggedUsers = [];
-var version = '0.1.20';
+var version = '0.1.21';
 var getTimeStamp = function () {
     function s4() {
         return Math.floor((1 + Math.random()) * 0x10000)
@@ -259,7 +259,7 @@ server.post('/echo/:name', function (req, res, next) {
 });
 
 var defaultHandler = function (req, res, next) {
-    res.send({ 'Build Number ': '0.1.14' });
+    res.send({ 'Build Number ': version });
     return next();
 };
 server.get('/', defaultHandler);
