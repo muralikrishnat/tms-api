@@ -1,4 +1,17 @@
 drop table businessunit;
+drop table designation;
+drop table emergencycontacts;
+drop table employee;
+drop table employeeprojectallocation;
+drop table holidays;
+drop table practise;
+drop table projects;
+drop table tasks;
+drop table timesheetcomments;
+drop table timesheets;
+drop table submissions;
+
+
 create table businessunit (
     id serial primary key not null,
     name varchar(100),
@@ -6,13 +19,13 @@ create table businessunit (
     addeddate date
 );
 
-drop table designation;
+
 create table designation (
     id serial primary key not null,
     name varchar(100)
 );
 
-drop table emergencycontacts;
+
 create table emergencycontacts (
     id serial primary key not null,
     name varchar(150),
@@ -22,7 +35,7 @@ create table emergencycontacts (
     empid int
 );
 
-drop table employee;
+
 create table employee (
     id serial primary key not null,
     firstname varchar(150),
@@ -49,7 +62,7 @@ create table employee (
 );
 
 
-drop table employeeprojectallocation;
+
 CREATE TABLE employeeprojectallocation
 (
     id serial primary key not null,
@@ -62,7 +75,7 @@ CREATE TABLE employeeprojectallocation
     allocationtype character varying(100)
 );
 
-drop table holidays;
+
 CREATE TABLE holidays
 (
     id serial primary key not null,
@@ -72,7 +85,7 @@ CREATE TABLE holidays
 );
 
 
-drop table practise;
+
 CREATE TABLE practise
 (
     id serial primary key not null,
@@ -80,7 +93,7 @@ CREATE TABLE practise
 );
 
 
-drop table projects;
+
 CREATE TABLE projects
 (
     id serial primary key not null,
@@ -92,7 +105,7 @@ CREATE TABLE projects
     actualenddate date
 );
 
-drop table tasks;
+
 CREATE TABLE tasks
 (
     id serial primary key not null,
@@ -100,7 +113,7 @@ CREATE TABLE tasks
     expectedwork character varying(20)
 );
 
-drop table timesheetcomments;
+
 CREATE TABLE timesheetcomments
 (
     id serial primary key not null,
@@ -111,7 +124,7 @@ CREATE TABLE timesheetcomments
     timesheetid numeric
 );
 
-drop table timesheets;
+
 CREATE TABLE timesheets
 (
     id serial primary key not null,
@@ -129,7 +142,7 @@ CREATE TABLE timesheets
 );
 
 
-drop table submissions;
+
 create table submissions (
 	id serial primary key,
     empid varchar(150),

@@ -509,6 +509,8 @@ server.post('/submissions', (req, res, next) => {
 });
 
 
+
+
 server.opts('/timesheetcomments', (req, res, next) => {
     res.header('Access-Control-Allow-Headers', 'Accept, Content-Type, X-Requested-With, POST, DELETE, GET');
     res.send(200);
@@ -521,9 +523,33 @@ server.opts('/.*', (req, res, next) => {
 });
 
 
-server.listen(1212, function () {
-    console.log('%s listening at %s', server.name, server.url);
-});
+
+
+var action;
+if (process.argv.length > 0) {
+    process.argv.forEach((t) => {
+        var kname = t.split('=')[0];
+        switch (kname) {
+            case 'do':
+                action = t.split('=').length > 0 ? t.split('=')[1] : null;
+                break;
+
+            default:
+                break;
+        }
+    });
+}
+
+if (action) {
+    server.close();
+    server.on('close', () => {
+         console.log(`stopped listening`);
+    });
+} else {
+    server.listen(1212, function () {
+        console.log('%s listening at %s', server.name, server.url);
+    });
+}
 
 
 //require('./fe-server')({ fePort: 3434, folder: 'ui' });

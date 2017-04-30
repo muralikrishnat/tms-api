@@ -1,5 +1,4 @@
 var pg = require('pg');
-
 var config = {
     user: 'postgres',
     database: 'EvokeDBDev',
@@ -10,12 +9,39 @@ var config = {
     idleTimeoutMillis: 30000,
 };
 
+var env,
+    action;
+if (process.argv.length > 0) {
+    process.argv.forEach((t) => {
+        var kname = t.split('=')[0];
+        if (kname === 'env' && t.split('=').length > 0) {
+            env = t.split('=')[1];
+        }
+
+        switch (kname) {
+            case 'do':
+                action = t.split('=').length > 0 ? t.split('=')[1] : null;
+                break;
+
+            default:
+                break;
+        }
+    });
+    if (env && env === 'gcloud') {
+        config.host = '104.155.62.60';
+        config.password = 'password';
+    }
+
+}
+
+
 var pool = new pg.Pool(config);
 
 var checkAndConnect = () => {
     return new Promise((res, rej) => {
         pool.connect(function (err, client, done) {
             if (err) {
+                console.log('connection error', config);
                 res({ err });
             } else {
                 res({ client, done });
