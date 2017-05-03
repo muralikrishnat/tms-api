@@ -527,11 +527,12 @@ module.exports = {
                     client.query(updateQuery, (cErr, result) => {
                         if (!err) {
                             if (result.rowCount) {
-                                res({ err: cErr, result: "" });
+                                res({ err: cErr, result: "Password Changed" });
+                            } else {
+                                res({ err: { code: 401, msg: 'Current password not matched' } });
                             }
-                            res({ err: cErr, result });
                         } else {
-                            res({ err: cErr, result });
+                            res({ err: { code: 401, msg: 'query error', details: cErr } });
                         }
 
                     });

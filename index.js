@@ -362,12 +362,12 @@ server.post('/changepassword', (req, res, next) => {
         lTokenValue,
         resObject = {};
     if (loggedUser) {
-        if (loggedUser.role === 'admin' || (loggedUser.empid === req.params.username || loggedUser.emailid === req.params.username || loggedUser.emailid === req.params.username + '@evoketechnologies.com')) {
-            changepassword({ username: req.params.username, currentpassword: req.params.currentpassword, newpassword: req.params.newpassword }).then(({ err, result }) => {
+        if (loggedUser.empid && req.params.currentpassword && req.params.newpassword) {
+            changepassword({ username: loggedUser.empid, currentpassword: req.params.currentpassword, newpassword: req.params.newpassword }).then(({ err, result }) => {
                 res.send({ err, result });
             });
         } else {
-            res.send(resObject);
+            res.send({ err: { code: 100, msg: ''}});
         }
     } else {
         res.send(resObject);
