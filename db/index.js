@@ -2,7 +2,7 @@ var pg = require('pg');
 var config = {
     user: 'postgres',
     database: 'EvokeDBDev',
-    password: 'password',
+    password: 'murali',
     host: 'localhost',
     port: 5432,
     max: 10,
