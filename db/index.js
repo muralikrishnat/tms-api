@@ -2,7 +2,7 @@ var pg = require('pg');
 var config = {
     user: 'postgres',
     database: 'EvokeDBDev',
-    password: 'murali',
+    password: 'password',
     host: 'localhost',
     port: 5432,
     max: 10,
@@ -31,9 +31,6 @@ if (process.argv.length > 0) {
         config.host = '104.155.62.60';
         config.password = 'password';
     }
-
-    console.log('env ', env);
-
 }
 
 
