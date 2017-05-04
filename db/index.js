@@ -32,6 +32,8 @@ if (process.argv.length > 0) {
         config.password = 'password';
     }
 
+    console.log('env ', env);
+
 }
 
 
