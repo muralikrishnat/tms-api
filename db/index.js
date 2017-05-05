@@ -8,13 +8,13 @@ var config = {
     max: 10,
     idleTimeoutMillis: 30000,
 };
-
+console.log('args ', process.argv);
 var env,
     action;
 if (process.argv.length > 0) {
     process.argv.forEach((t) => {
         var kname = t.split('=')[0];
-        if (kname === 'env' && t.split('=').length > 0) {
+        if ((kname === 'env' || kname.replace('--', '') === 'env') && t.split('=').length > 0) {
             env = t.split('=')[1];
         }
 
@@ -30,6 +30,10 @@ if (process.argv.length > 0) {
     if (env && env === 'gcloud') {
         config.host = '104.155.62.60';
         config.password = 'password';
+    }
+
+    if (env && env === 'ginstance') {
+        config.password = 'murali';
     }
 }
 
@@ -77,6 +81,9 @@ var { getProjects } = require('./controllers/projects');
 var { getHolidays, addHoliday } = require('./controllers/holidays');
 var { addTimesheet, getTimesheet } = require('./controllers/timesheets');
 module.exports = {
+    init: function (config) {
+        pool = new pg.Pool(config);
+    },
     submissions: ({ get, loggedUser, id, empid, pid, submonth, subyear, subcount }) => {
         return new Promise((res, rej) => {
             var query = '',
