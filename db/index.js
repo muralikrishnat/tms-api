@@ -31,6 +31,10 @@ if (process.argv.length > 0) {
         config.host = '104.155.62.60';
         config.password = 'password';
     }
+
+    if (env && env === 'ginstance') {
+        config.password = 'password';
+    }
 }
 
 
