@@ -36,27 +36,47 @@ var isAuthenticatedToken = function (lToken, req) {
 };
 var checkAuthentication = true;
 var restify = require('restify');
-var {
-    getEmployees,
-    getProjects,
-    getHolidays,
-    addHoliday,
-    addTimesheet,
-    getTimesheet,
-    authenticate,
-    changepassword,
-    updateProfile,
-    addEmployee,
-    updateAllocation,
-    getAllocation,
-    addProject,
-    deleteEmployee,
-    deleteProject,
-    updateTimesheet,
-    approveTimesheets,
-    sendAprovalMail,
-    forgotpassword
- } = require('./db');
+var db = require('./db');
+var config = {
+    user: 'postgres',
+    database: 'EvokeDBDev',
+    password: 'murali',
+    host: 'localhost',
+    port: 5432,
+    max: 10,
+    idleTimeoutMillis: 30000,
+};
+var env,
+    action;
+if (process.argv.length > 0) {
+    process.argv.forEach((t) => {
+        var kname = t.split('=')[0];
+        if ((kname === 'env' || kname.replace('--', '') === 'env') && t.split('=').length > 0) {
+            env = t.split('=')[1];
+        }
+
+        switch (kname) {
+            case 'do':
+                action = t.split('=').length > 0 ? t.split('=')[1] : null;
+                break;
+
+            default:
+                break;
+        }
+    });
+    if (env && env === 'gcloud') {
+        config.host = '104.155.62.60';
+        config.password = 'password';
+    }
+
+    if(env && env === 'ginstance') {
+        config.password = 'password';
+    }
+}
+
+console.log('config ', config);
+db.init(config);
+
 var server = restify.createServer();
 server.use(restify.acceptParser(server.acceptable));
 server.use(restify.queryParser());
@@ -105,7 +125,7 @@ server.use(function (req, res, next) {
 });
 
 server.get('/employees', function (req, res, next) {
-    getEmployees({ EmpId: req.query.empid, ProjectId: req.query.projectid }).then(({ err, result }) => {
+    db.getEmployees({ EmpId: req.query.empid, ProjectId: req.query.projectid }).then(({ err, result }) => {
         res.send({ err, result: result.rows });
     });
     return next();
@@ -123,7 +143,7 @@ server.post('/employees', function (req, res, next) {
     req.params.loggedUser = req.loggedUser;
     if (req.loggedUser.role.toUpperCase() === 'admin'.toUpperCase()) {
         if (isValidNewEmployee(req.params) || req.params.id) {
-            addEmployee(req.params).then(({ err, result }) => {
+            db.addEmployee(req.params).then(({ err, result }) => {
                 res.send({ err, result });
             });
         } else {
@@ -140,7 +160,7 @@ server.del('/employees', (req, res, next) => {
     req.params.loggedUser = req.loggedUser;
     if (req.loggedUser.role.toUpperCase() === 'admin'.toUpperCase()) {
         if (req.params.id || req.query.id) {
-            deleteEmployee(req.params.id || req.query.id).then(({ err, result }) => {
+            db.deleteEmployee(req.params.id || req.query.id).then(({ err, result }) => {
                 res.send({ err, result });
             });
         } else {
@@ -153,7 +173,7 @@ server.del('/employees', (req, res, next) => {
 });
 
 server.get('/projects', function (req, res, next) {
-    getProjects({ EmpId: req.query.empid, ProjectId: req.query.projectid }).then(({ err, result }) => {
+    db.getProjects({ EmpId: req.query.empid, ProjectId: req.query.projectid }).then(({ err, result }) => {
         res.send({ err, result: result.rows });
     });
     return next();
@@ -163,7 +183,7 @@ server.post('/projects', function (req, res, next) {
     req.params.loggedUser = req.loggedUser;
     if (req.loggedUser.role.toUpperCase() === 'admin'.toUpperCase()) {
         if (req.params.name || req.query.name) {
-            addProject(req.params).then(({ err, result }) => {
+            db.addProject(req.params).then(({ err, result }) => {
                 res.send({ err, result: result });
             });
         } else {
@@ -180,7 +200,7 @@ server.del('/projects', (req, res, next) => {
         req.params.loggedUser = req.loggedUser;
         if (req.loggedUser.role.toUpperCase() === 'admin'.toUpperCase()) {
             if (req.params.id || req.query.id) {
-                deleteProject({ id: (req.params.id || req.query.id), loggedUser: req.loggedUser }).then(({ err, result }) => {
+                db.deleteProject({ id: (req.params.id || req.query.id), loggedUser: req.loggedUser }).then(({ err, result }) => {
                     res.send({ err, result });
                 });
             } else {
@@ -198,21 +218,21 @@ server.del('/projects', (req, res, next) => {
 
 
 server.get('/holidays', function (req, res, next) {
-    getHolidays({}).then(({ err, result }) => {
+    db.getHolidays({}).then(({ err, result }) => {
         res.send(result);
     });
     return next();
 });
 
 server.post('/holidays', function (req, res, next) {
-    addHoliday({ name: req.params.name, holidaydate: req.params.holidaydate, isoptional: req.params.isoptional }).then(({ err, result }) => {
+    db.addHoliday({ name: req.params.name, holidaydate: req.params.holidaydate, isoptional: req.params.isoptional }).then(({ err, result }) => {
         res.send(result);
     });
     return next();
 });
 
 server.get('/timesheets', function (req, res, next) {
-    getTimesheet(req.query).then(({ err, result }) => {
+    db.getTimesheet(req.query).then(({ err, result }) => {
         res.send({ err, result: (result['rows'] ? result.rows : result) });
     });
     return next();
@@ -224,11 +244,11 @@ server.post('/timesheets', function (req, res, next) {
         if (req.params.empid == req.loggedUser.empid || req.loggedUser.role == 'admin') {
             if (req.params.empid && req.params.projectid && req.params.timesheetdate) {
                 if (req.params.id) {
-                    updateTimesheet(req.params).then(({ err, result }) => {
+                    db.updateTimesheet(req.params).then(({ err, result }) => {
                         res.send({ err, result });
                     });
                 } else {
-                    addTimesheet(req.params).then(({ err, result }) => {
+                    db.addTimesheet(req.params).then(({ err, result }) => {
                         res.send({ err, result });
                     });
                 }
@@ -247,7 +267,7 @@ server.post('/timesheets', function (req, res, next) {
 
 server.post('/approvetimesheets', function (req, res, next) {
     req.params.loggedUser = req.loggedUser;
-    approveTimesheets(req.params).then(({ err, result }) => {
+    db.approveTimesheets(req.params).then(({ err, result }) => {
         res.send({ err, result });
     });
     return next();
@@ -279,7 +299,7 @@ server.post('/authenticate', function (req, res, next) {
         }
         next();
     } else {
-        authenticate({ username: req.params.username, password: req.params.password }).then(({ err, result }) => {
+        db.authenticate({ username: req.params.username, password: req.params.password }).then(({ err, result }) => {
             var respObject = { err };
             if (!err) {
                 if (result.rowCount) {
@@ -311,7 +331,7 @@ server.post('/allocations', (req, res, next) => {
             } else {
                 req.params.isAdd = true;
             }
-            updateAllocation(req.params).then(({ err, result }) => {
+            db.updateAllocation(req.params).then(({ err, result }) => {
                 res.send({ err, result });
             });
         } else {
@@ -330,7 +350,7 @@ server.del('/allocations', (req, res, next) => {
             console.log('id ', req.params.id, req.query.id);
             req.params.isRemove = true;
             req.params.id = req.params.id || req.query.id;
-            updateAllocation(req.params).then(({ err, result }) => {
+            db.updateAllocation(req.params).then(({ err, result }) => {
                 res.send({ err, result });
             });
         } else {
@@ -343,7 +363,7 @@ server.del('/allocations', (req, res, next) => {
 });
 
 server.get('/allocations', (req, res, next) => {
-    getAllocation(req.params).then(({ err, result }) => {
+    db.getAllocation(req.params).then(({ err, result }) => {
         res.send({ err, result: (result['rows'] ? result.rows : result) });
     });
     return next();
@@ -351,7 +371,7 @@ server.get('/allocations', (req, res, next) => {
 
 server.post('/profile', (req, res, next) => {
     req.params.loggedUser = req.loggedUser;
-    updateProfile(req.params).then(({ err, result }) => {
+    db.updateProfile(req.params).then(({ err, result }) => {
         res.send({});
     });
     return next();
@@ -363,11 +383,11 @@ server.post('/changepassword', (req, res, next) => {
         resObject = {};
     if (loggedUser) {
         if (loggedUser.empid && req.params.currentpassword && req.params.newpassword) {
-            changepassword({ username: loggedUser.empid, currentpassword: req.params.currentpassword, newpassword: req.params.newpassword }).then(({ err, result }) => {
+            db.changepassword({ username: loggedUser.empid, currentpassword: req.params.currentpassword, newpassword: req.params.newpassword }).then(({ err, result }) => {
                 res.send({ err, result });
             });
         } else {
-            res.send({ err: { code: 100, msg: ''}});
+            res.send({ err: { code: 100, msg: '' } });
         }
     } else {
         res.send(resObject);
@@ -405,7 +425,7 @@ server.get('/logout', function (req, res, next) {
 server.post('/sendmail', (req, res, next) => {
     req.params.loggedUser = req.loggedUser;
     if (req.loggedUser) {
-        sendAprovalMail(req.params).then(({ err, result }) => {
+        db.sendAprovalMail(req.params).then(({ err, result }) => {
             res.send({ err, result });
         });
     } else {
@@ -437,9 +457,8 @@ server.opts('/forgotpassword', (req, res, next) => {
     return next();
 });
 
-var db = require('./db');
 server.post('/forgotpassword', (req, res, next) => {
-    forgotpassword(req.params).then(({ err, result }) => {
+    db.forgotpassword(req.params).then(({ err, result }) => {
         res.send({ err, result });
     });
     return next();
@@ -543,7 +562,7 @@ if (process.argv.length > 0) {
 if (action) {
     server.close();
     server.on('close', () => {
-         console.log(`stopped listening`);
+        console.log(`stopped listening`);
     });
 } else {
     server.listen(1212, function () {

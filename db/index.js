@@ -8,7 +8,7 @@ var config = {
     max: 10,
     idleTimeoutMillis: 30000,
 };
-
+console.log('args ', process.argv);
 var env,
     action;
 if (process.argv.length > 0) {
@@ -77,6 +77,9 @@ var { getProjects } = require('./controllers/projects');
 var { getHolidays, addHoliday } = require('./controllers/holidays');
 var { addTimesheet, getTimesheet } = require('./controllers/timesheets');
 module.exports = {
+    init: function (config) {
+        pool = new pg.Pool(config);
+    },
     submissions: ({ get, loggedUser, id, empid, pid, submonth, subyear, subcount }) => {
         return new Promise((res, rej) => {
             var query = '',
