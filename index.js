@@ -70,7 +70,7 @@ if (process.argv.length > 0) {
     }
 
     if(env && env === 'ginstance') {
-        config.password = 'password';
+        config.password = 'murali';
     }
 }
 
