@@ -14,7 +14,7 @@ var env,
 if (process.argv.length > 0) {
     process.argv.forEach((t) => {
         var kname = t.split('=')[0];
-        if (kname === 'env' && t.split('=').length > 0) {
+        if ((kname === 'env' || kname.replace('--', '') === 'env') && t.split('=').length > 0) {
             env = t.split('=')[1];
         }
 
@@ -33,7 +33,7 @@ if (process.argv.length > 0) {
     }
 
     if (env && env === 'ginstance') {
-        config.password = 'password';
+        config.password = 'murali';
     }
 }
 
