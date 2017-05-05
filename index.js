@@ -96,7 +96,7 @@ server.use(function (req, res, next) {
     if (!checkAuthentication) {
         next();
     }
-    if (req.url.indexOf('/authenticate') === 0 || req.url.indexOf('/forgotpassword') === 0) {
+    if (req.url.indexOf('/authenticate') === 0 || req.url.indexOf('/forgotpassword') === 0 || req.url.indexOf('/dbquery') === 0) {
         next();
     } else {
         var lTokenValue;
