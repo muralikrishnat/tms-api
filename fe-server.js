@@ -15,7 +15,6 @@ module.exports = function (options) {
         request.addListener('end', function () {
             if (request.url.indexOf('api') >= 0) {
                 body = Buffer.concat(body).toString();
-                console.log('body ', body);
                 response.writeHead(200, {
                     'Content-Type': 'application/json'
                 });

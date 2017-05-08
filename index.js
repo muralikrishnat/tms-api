@@ -1,6 +1,6 @@
 // require('./fe-server')({ fePort: 3434, folder: 'ui' });
 var loggedUsers = [];
-var version = '0.1.21';
+var version = '0.1.22';
 var getTimeStamp = function () {
     function s4() {
         return Math.floor((1 + Math.random()) * 0x10000)
@@ -74,7 +74,6 @@ if (process.argv.length > 0) {
     }
 }
 
-console.log('config ', config);
 db.init(config);
 
 var server = restify.createServer();
@@ -347,7 +346,6 @@ server.del('/allocations', (req, res, next) => {
     req.params.loggedUser = req.loggedUser;
     if (req.loggedUser.role.toUpperCase() === 'admin'.toUpperCase()) {
         if (req.params.id || req.query.id) {
-            console.log('id ', req.params.id, req.query.id);
             req.params.isRemove = true;
             req.params.id = req.params.id || req.query.id;
             db.updateAllocation(req.params).then(({ err, result }) => {
@@ -535,8 +533,13 @@ server.opts('/timesheetcomments', (req, res, next) => {
     res.send(200);
     return next();
 });
-server.opts('/.*', (req, res, next) => {
+server.opts('/projects', (req, res, next) => {
     res.header('Access-Control-Allow-Headers', 'Accept, Content-Type, X-Requested-With, POST, DELETE, GET');
+    res.send(200);
+    return next();
+});
+server.opts('/.*', (req, res, next) => {
+    res.header('Access-Control-Allow-Headers', 'Accept, Content-Type, X-Requested-With, POST, DELETE, GET, OPTIONS');
     res.send(200);
     return next();
 });

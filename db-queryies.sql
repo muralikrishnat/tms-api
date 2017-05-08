@@ -155,7 +155,7 @@ create table submissions (
 
 -- To Add root user in DB
 insert into employee (firstname, lastname, empid, password, emailid, reportingmanger, role)
-values ('admin', 'admin', '1', 'admin', 'admin', 0, 'admin');
+values ('admin', 'admin', '1', 'admin', 'mtottimpudi', 0, 'admin');
 
 insert into projects (name)
 values ('Non Billing (On Leave)');

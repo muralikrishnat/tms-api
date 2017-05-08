@@ -8,7 +8,6 @@ var config = {
     max: 10,
     idleTimeoutMillis: 30000,
 };
-console.log('args ', process.argv);
 var env,
     action;
 if (process.argv.length > 0) {
@@ -587,13 +586,16 @@ module.exports = {
                         }
                         queryToExecute = insertQuery + ' (' + namesArr.join(',') + ') values (' + valuesArr.join(',') + ')';
                         if (id) {
-                            queryToExecute = `update projects 
-                                            set 
-                                                name='${name}',
-                                                actualstartdate='${actualstartdate}'
-                                                actualenddate='${actualenddate}'
-                                                where id=${id} ;
-                                            `;
+                            var actualdate = actualstartdate ? `,actualstartdate='${actualstartdate}'`: '';
+                            var actualend = actualenddate ? `,actualenddate='${actualenddate}'` : '';
+                            queryToExecute = `
+                                update projects 
+                                set 
+                                name='${name}'
+                                ${actualdate}
+                                ${actualend}
+                                where id=${id} ;
+                            `;
                         }
                         client.query(queryToExecute, (cErr, result) => {
                             done();
@@ -823,16 +825,6 @@ module.exports = {
                     done();
                     if (!cErr) {
                         if (result.rowCount) {
-
-                            // let mailOptions = {
-                            //     from: '"Timesheet Manager" <muralit.evoke@gmail.com>',
-                            //     to: 'mtottimpudi@evoketechnologies.com',
-                            //     subject: 'Timesheet Updation',
-                            //     text: mailContent,
-                            //     html: '<b>'+ mailContent +'</b>'
-                            // };
-                            // require('./mail-manager').sendMail(mailOptions);
-                            console.log('results ', result);
                             res({ err: cErr, result: "" });
                         } else {
                             res({ err: { code: 601, msg: 'Updation failed' } });
