@@ -83,7 +83,7 @@ module.exports = {
     init: function (config) {
         pool = new pg.Pool(config);
     },
-    submissions: ({ get, loggedUser, id, empid, pid, submonth, subyear, subcount }) => {
+    submissions: ({ get, loggedUser, id, empid, pid, submonth, subyear, subcount, isDelete }) => {
         return new Promise((res, rej) => {
             var query = '',
                 fieldsmissing = false;
@@ -109,11 +109,15 @@ module.exports = {
                         fieldsmissing = true;
                     }
                 } else {
-                    query = 'update submissions ';
-                    if (subcount) {
-                        query = query + ` set subcount=${subcount}, submittedon=now() where id=${id}`;
+                    if (!isDelete) {
+                        query = 'update submissions ';
+                        if (subcount) {
+                            query = query + ` set subcount=${subcount}, submittedon=now() where id=${id}`;
+                        } else {
+                            fieldsmissing = true;
+                        }
                     } else {
-                        fieldsmissing = true;
+                        query = `delete from submissions where id=${id}`;
                     }
                 }
             }
@@ -586,7 +590,7 @@ module.exports = {
                         }
                         queryToExecute = insertQuery + ' (' + namesArr.join(',') + ') values (' + valuesArr.join(',') + ')';
                         if (id) {
-                            var actualdate = actualstartdate ? `,actualstartdate='${actualstartdate}'`: '';
+                            var actualdate = actualstartdate ? `,actualstartdate='${actualstartdate}'` : '';
                             var actualend = actualenddate ? `,actualenddate='${actualenddate}'` : '';
                             queryToExecute = `
                                 update projects 

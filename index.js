@@ -525,8 +525,26 @@ server.post('/submissions', (req, res, next) => {
     return next();
 });
 
+server.del('/submissions', (req, res, next) => {
+    req.params.loggedUser = req.loggedUser;
+    if (req.loggedUser && (req.params.id || req.query.id)) {
+        req.params.isDelete = true;
+        req.params.id = req.params.id || req.query.id;
+        db.submissions(req.params).then(({ err, result }) => {
+            res.send({ err, result });
+        });
+    } else {
+        res.send({ err: 'Authentication required' });
+    }
+    return next();
+});
 
 
+server.opts('/submissions', (req, res, next) => {
+    res.header('Access-Control-Allow-Headers', 'Accept, Content-Type, X-Requested-With, POST, DELETE, GET');
+    res.send(200);
+    return next();
+});
 
 server.opts('/timesheetcomments', (req, res, next) => {
     res.header('Access-Control-Allow-Headers', 'Accept, Content-Type, X-Requested-With, POST, DELETE, GET');
