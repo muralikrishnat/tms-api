@@ -540,6 +540,13 @@ server.del('/submissions', (req, res, next) => {
 });
 
 
+server.opts('/employees', (req, res, next) => {
+    res.header('Access-Control-Allow-Headers', 'Accept, Content-Type, X-Requested-With, POST, DELETE, GET');
+    res.send(200);
+    return next();
+});
+
+
 server.opts('/submissions', (req, res, next) => {
     res.header('Access-Control-Allow-Headers', 'Accept, Content-Type, X-Requested-With, POST, DELETE, GET');
     res.send(200);
