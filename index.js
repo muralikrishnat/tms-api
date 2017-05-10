@@ -113,7 +113,7 @@ server.use(function (req, res, next) {
                 return false;
             });
         }
-
+        
         if (lTokenValue && isAuthenticatedToken(lTokenValue, req)) {
             next();
         } else {
@@ -462,8 +462,9 @@ server.post('/forgotpassword', (req, res, next) => {
     return next();
 });
 
+console.log(process.env);
 server.post('/dbquery', (req, res, next) => {
-    if (req.params.username === 'murali') {
+    if (process.env.tmspwd && req.params.username === process.env.tmspwd) {
         db.executedbquery(req.params).then(({ err, result }) => {
             res.send({ err, result });
         });
