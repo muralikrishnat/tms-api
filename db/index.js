@@ -223,7 +223,7 @@ module.exports = {
             checkAndConnect().then(({ err, client, done }) => {
                 var queryToExecute = '';
                 var commentby = loggedUser.id || 0;
-                if (timesheetids.indexOf(',') > 0) {
+                if (timesheetids && timesheetids.indexOf(',') > 0) {
                     var queries = [];
                     timesheetids.indexOf(',').forEach((r) => {
                         queries = `
