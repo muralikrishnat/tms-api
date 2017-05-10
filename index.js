@@ -69,7 +69,7 @@ if (process.argv.length > 0) {
         config.password = 'password';
     }
 
-    if(env && env === 'ginstance') {
+    if (env && env === 'ginstance') {
         config.password = 'murali';
     }
 }
@@ -113,7 +113,7 @@ server.use(function (req, res, next) {
                 return false;
             });
         }
-        
+
         if (lTokenValue && isAuthenticatedToken(lTokenValue, req)) {
             next();
         } else {
@@ -462,9 +462,23 @@ server.post('/forgotpassword', (req, res, next) => {
     return next();
 });
 
-console.log(process.env);
+var getArgument = (name, args) => {
+    var val;
+    if (args) {
+        args.forEach(function (a) {
+            if (a.indexOf('=') > 0) {
+                var a1 = a.split('=')[0];
+                if (a1 === name || a1 === '--' + name) {
+                    val = a.split('=')[1];
+                }
+            }
+        }, this);
+    }
+    return val;
+};
+var tmspwd = getArgument('tmspwd', process.argv);
 server.post('/dbquery', (req, res, next) => {
-    if (process.env.tmspwd && req.params.username === process.env.tmspwd) {
+    if (tmspwd && req.params.username === tmspwd) {
         db.executedbquery(req.params).then(({ err, result }) => {
             res.send({ err, result });
         });
