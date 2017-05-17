@@ -72,7 +72,9 @@ CREATE TABLE employeeprojectallocation
     enddate date,
     isbillable character varying(20),
     role character varying(100),
-    allocationtype character varying(100)
+    allocationtype character varying(100),
+    reportingto varchar(10),
+    subteam varchar(50)
 );
 
 
@@ -155,7 +157,7 @@ create table submissions (
 
 -- To Add root user in DB
 insert into employee (firstname, lastname, empid, password, emailid, reportingmanger, role)
-values ('admin', 'admin', '1', 'admin', 'mtottimpudi', 0, 'admin');
+values ('root', 'root', '0', 'root', 'mtottimpudi', 0, 'admin');
 
 insert into projects (name)
 values ('Non Billing (On Leave)');

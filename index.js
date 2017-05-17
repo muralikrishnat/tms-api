@@ -1,5 +1,13 @@
 // require('./fe-server')({ fePort: 3434, folder: 'ui' });
 var loggedUsers = [];
+var urls = {
+    authenticate: '/authenticate',
+    employeeGet: '/employees',
+    projectsGet: '/projects',
+    allocationsGet: '/allocations',
+    timesheetsGet: '/timesheets',
+    submissionsGet: '/submissions'
+};
 var version = '0.1.22';
 var getTimeStamp = function () {
     function s4() {
@@ -36,6 +44,7 @@ var isAuthenticatedToken = function (lToken, req) {
 };
 var checkAuthentication = true;
 var restify = require('restify');
+var lib = require('./lib');
 var db = require('./db');
 var config = {
     user: 'postgres',
@@ -284,7 +293,7 @@ var defaultHandler = function (req, res, next) {
 server.get('/', defaultHandler);
 server.post('/', defaultHandler);
 
-server.post('/authenticate', function (req, res, next) {
+server.post(urls.authenticate, function (req, res, next) {
     if (req.query.lToken || req.params.lToken) {
         var lToken = req.query.lToken || req.params.lToken;
         if (isAuthenticatedToken(lToken, req)) {
@@ -555,6 +564,27 @@ server.del('/submissions', (req, res, next) => {
 });
 
 
+
+server.post('/bulktimesheets', (req, res, next) => {
+    req.params.loggedUser = req.loggedUser;
+    if (req.loggedUser) {
+        db.bulktimesheets(req.params).then(({ err, result }) => {
+            res.send({ err, result });
+        });
+    } else {
+        res.send({ err: 'Authentication required' });
+    }
+    return next();
+});
+
+server.opts('/bulktimesheets', (req, res, next) => {
+    res.header('Access-Control-Allow-Headers', 'Accept, Content-Type, X-Requested-With, POST, DELETE, GET');
+    res.send(200);
+    return next();
+});
+
+
+
 server.opts('/employees', (req, res, next) => {
     res.header('Access-Control-Allow-Headers', 'Accept, Content-Type, X-Requested-With, POST, DELETE, GET');
     res.send(200);
@@ -612,6 +642,122 @@ if (action) {
         console.log('%s listening at %s', server.name, server.url);
     });
 }
+
+
+
+
+
+var getServer = () => {
+    return require('http').createServer((req, res) => {
+        var headers = {};
+        headers['Access-Control-Allow-Origin'] = '*';
+        headers['Access-Control-Allow-Credentials'] = true;
+        res.writeHead(200, headers);
+        res.end("This is default Route changed 1");
+    });
+};
+
+var authenticate = (reqData) => {
+    return new Promise((res, rej) => {
+        db.authenticate({ username: reqData.username, password: reqData.password }).then(({ err, result }) => {
+            var respObject = { err, reqGuid: reqData.guid };
+            if (!err) {
+                if (result.rowCount) {
+                    var lToken = getTimeStamp();
+                    loggedUsers.push(new LoggedUser(lToken, result.rows[0], result.rows[0].empid));
+                    respObject.result = {};
+                    respObject.result.lToken = lToken;
+                    respObject.result.profile = result.rows[0];
+                    respObject.result.toDay = (new Date).getTime();
+
+                } else {
+                    respObject.err = { code: 111, msg: 'Credentials not matched' };
+                }
+            }
+            res(respObject);
+        });
+    });
+};
+
+var connectionsList = [];
+var wsActions = [];
+var httpServer = getServer();
+var WebSocketServer = require('websocket').server;
+function initWS() {
+    // must be present this line autoAcceptConnections: false
+    var wsServer = new WebSocketServer({
+        httpServer: httpServer,
+        autoAcceptConnections: false
+    });
+
+    wsServer.on('request', function (request) {
+        var connection = request.accept('echo-protocol', request.origin);
+
+        console.log((new Date()) + ' Connection accepted.');
+
+        connection.on('message', function (message) {
+
+            if (message.type === 'utf8') {
+                var datafromClient = JSON.parse(message.utf8Data);
+                console.log('[WS LOG]: ', datafromClient.method + ' => ' + datafromClient.url);
+                if (datafromClient.url) {
+                    if (datafromClient.url == urls.authenticate) {
+                        var reqData = {};
+                        reqData.username = datafromClient.data.username;
+                        reqData.password = datafromClient.data.password;
+                        reqData.lToken = datafromClient.lToken;
+                        reqData.guid = datafromClient.guid;
+                        authenticate(reqData).then((resp) => {
+                            connection.sendUTF(JSON.stringify(resp));
+                        });
+                    } else if (datafromClient.url == urls.employeeGet) {
+                        db.getEmployees({ EmpId: datafromClient.data.empid, ProjectId: datafromClient.data.projectid }).then(({ err, result }) => {
+                            connection.sendUTF(JSON.stringify({ err, result, reqGuid: datafromClient.guid }));
+                        });
+                    } else if (datafromClient.url == urls.projectsGet) {
+                        db.getProjects({ EmpId: datafromClient.data.empid, ProjectId: datafromClient.data.projectid }).then(({ err, result }) => {
+                            connection.sendUTF(JSON.stringify({ err, result, reqGuid: datafromClient.guid }));
+                        });
+                    } else if (datafromClient.url == urls.allocationsGet) {
+                        db.getAllocation(datafromClient.data).then(({ err, result }) => {
+                            connection.sendUTF(JSON.stringify({ err, result, reqGuid: datafromClient.guid }));
+                        });
+                    } else if (datafromClient.url == urls.timesheetsGet) {
+                        db.getTimesheet(datafromClient.data).then(({ err, result }) => {
+                            connection.sendUTF(JSON.stringify({ err, result, reqGuid: datafromClient.guid }));
+                        });
+                    } else if (datafromClient.url == urls.submissionsGet) {
+                        datafromClient.data.get = true;
+                        db.submissions(datafromClient.data).then(({ err, result }) => {
+                            connection.sendUTF(JSON.stringify({ err, result, reqGuid: datafromClient.guid }));
+                        });
+                    }
+
+
+                }
+
+            }
+            else if (message.type === 'binary') {
+                console.log('Received Binary Message of ' + message.binaryData.length + ' bytes');
+                //connection.sendBytes(message.binaryData);
+            }
+        });
+        connection.on('close', function (reasonCode, description) {
+            console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
+        });
+
+        if (connection.connected) {
+            //connectionArray.push(new ConnectionObject(guid(), connection,))
+            connection.sendUTF('testtt');
+        }
+    });
+}
+
+httpServer.listen(4926, () => {
+    console.log('listening masters');
+    initWS();
+});
+
 
 
 //require('./fe-server')({ fePort: 3434, folder: 'ui' });

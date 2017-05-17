@@ -83,6 +83,41 @@ module.exports = {
     init: function (config) {
         pool = new pg.Pool(config);
     },
+    bulktimesheets: ({ loggedUser, sheets }) => {
+        return new Promise((res, rej) => {
+            if (sheets && sheets instanceof Array) {
+                var query = [];
+                var commentby = loggedUser.id || 0;
+                sheets.forEach(sheet => {
+                    query.push(`
+                        INSERT INTO timesheets
+                            (empid, projectid, taskid, loggedhours, isapproved, declinedcount, comment, isholiday, onleave, comboff, timesheetdate)
+	                    VALUES 
+                            ('${sheet.empid}', '${sheet.projectid}', '', 0, false, 0, '', false, false, false, '${sheet.timesheetdate}');
+                    `);
+                });
+
+                query = query.join(';');
+                checkAndConnect().then(({ err, client, done }) => {
+                    if (!err) {
+                        client.query(query, (cErr, result) => {
+                            done();
+                            if (!cErr) {
+                                res({ result: result.rows });
+                            } else {
+                                res({ err: { code: 2324, msg: 'query Issue', details: cErr } });
+                            }
+                        });
+                    } else {
+                        res({ err: { code: 2323, msg: 'Connection Issue', details: err } });
+                    }
+                });
+            } else {
+                res({ err: { code: 222, msg: 'sheets are missing' } });
+            }
+
+        });
+    },
     submissions: ({ get, loggedUser, id, empid, pid, submonth, subyear, subcount, isDelete }) => {
         return new Promise((res, rej) => {
             var query = '',
@@ -663,6 +698,8 @@ module.exports = {
         isAdd,
         isRemove,
         isUpdate,
+        reportingto,
+        subteam,
         loggedUser
     }) => {
         return new Promise((res, rej) => {
@@ -685,6 +722,16 @@ module.exports = {
                         valuesArr.push(`${endDate}`);
                     }
 
+                    if (reportingto) {
+                        namesArr.push('reportingto');
+                        valuesArr.push(`${reportingto}`);
+                    }
+
+                    if (subteam) {
+                        namesArr.push('subteam');
+                        valuesArr.push(`${subteam}`);
+                    }
+
                     queryToExecute = insertQuery + ' (' + namesArr.join(',') + ') values (' + valuesArr.join(',') + ')';
                 } else if (isUpdate) {
                     var updateQuery = 'update employeeprojectallocation',
@@ -698,7 +745,15 @@ module.exports = {
                             setArr.push(` enddate='${enddate}' `);
                         }
                         if (isbillable) {
-                            setArr.push(` isbillable='${isbillable}'`);
+                            setArr.push(` isbillable='${isbillable}' `);
+                        }
+
+                        if (reportingto) {
+                            setArr.push(` reportingto='${reportingto}' `);
+                        }
+
+                        if (subteam) {
+                            setArr.push(` subteam='${subteam}' `);
                         }
                     }
                     if (id) {
@@ -863,6 +918,7 @@ module.exports = {
                 if (loggedUser) {
                     if (loggedhours) {
                         setArr.push(` loggedhours=${loggedhours} `);
+                        setArr.push(` declinedcount=0 `);
                     }
                     setArr.push(` isapproved=${isapproved} `);
 
