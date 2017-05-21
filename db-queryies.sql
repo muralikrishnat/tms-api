@@ -10,6 +10,10 @@ drop table tasks;
 drop table timesheetcomments;
 drop table timesheets;
 drop table submissions;
+drop table logs;
+drop table projectsubmissions;
+drop table permissioncode;
+drop table userpermissions;
 
 
 create table businessunit (
@@ -155,9 +159,43 @@ create table submissions (
     submittedon timestamp with time zone
 );
 
+create table logs (
+	id serial primary key,
+    updateby varchar(100),
+    updateddate timestamp with time zone,
+    tablename varchar(100),
+    updateddata text,
+   	updatinginfo text
+);
+
+create table projectsubmissions (
+    id serial primary key,
+    pid numeric,
+    submonth numeric,
+    subyear numeric,
+    submittedon timestamp with time zone,
+    submittedby varchar(50)
+);
+
+
+create table permissioncode(
+	id serial primary key,
+    name varchar(50),
+    code varchar(10),
+    description text
+);
+create table userpermissions (
+	id serial primary key,
+    code varchar(10),
+    empid varchar(50)
+);
+
+
+
 -- To Add root user in DB
 insert into employee (firstname, lastname, empid, password, emailid, reportingmanger, role)
 values ('root', 'root', '0', 'root', 'mtottimpudi', 0, 'admin');
 
 insert into projects (name)
 values ('Non Billing (On Leave)');
+

@@ -80,8 +80,34 @@ var { getProjects } = require('./controllers/projects');
 var { getHolidays, addHoliday } = require('./controllers/holidays');
 var { addTimesheet, getTimesheet } = require('./controllers/timesheets');
 module.exports = {
+    checkAndConnect,
     init: function (config) {
         pool = new pg.Pool(config);
+    },
+    logs: function ({ loggedUser, log, isget, isdelete, query }) {
+        return new Promise((res, rej) => {
+            var query = ' select * from logs order by id ';
+            if (isget) {
+                if (query && query.limit) {
+                    query = query + ` desc limit ${query.limit}`;
+                }
+
+            }
+            checkAndConnect().then(({ err, client, done }) => {
+                if (!err) {
+                    client.query(query, (cErr, result) => {
+                        done();
+                        if (!cErr) {
+                            res({ result: result.rows });
+                        } else {
+                            res({ err: { code: 2324, msg: 'query Issue', details: cErr } });
+                        }
+                    });
+                } else {
+                    res({ err: { code: 2323, msg: 'Connection Issue', details: err } });
+                }
+            });
+        });
     },
     bulktimesheets: ({ loggedUser, sheets }) => {
         return new Promise((res, rej) => {
@@ -89,12 +115,22 @@ module.exports = {
                 var query = [];
                 var commentby = loggedUser.id || 0;
                 sheets.forEach(sheet => {
-                    query.push(`
-                        INSERT INTO timesheets
-                            (empid, projectid, taskid, loggedhours, isapproved, declinedcount, comment, isholiday, onleave, comboff, timesheetdate)
-	                    VALUES 
-                            ('${sheet.empid}', '${sheet.projectid}', '', 0, false, 0, '', false, false, false, '${sheet.timesheetdate}');
-                    `);
+                    if (sheet.id) {
+                        query.push(`
+                            UPDATE timesheets
+                            set isapproved = false,
+                                declinedcount = 0
+                            where id=${sheet.id};
+                        `);
+                    } else {
+                        query.push(`
+                            INSERT INTO timesheets
+                                (empid, projectid, taskid, loggedhours, isapproved, declinedcount, comment, isholiday, onleave, comboff, timesheetdate)
+	                        VALUES 
+                                ('${sheet.empid}', '${sheet.projectid}', '', ${sheet.loggedhours}, false, 0, '', false, false, false, '${sheet.timesheetdate}');
+                        `);
+                    }
+
                 });
 
                 query = query.join(';');
@@ -260,7 +296,7 @@ module.exports = {
                 var commentby = loggedUser.id || 0;
                 if (timesheetids && timesheetids.indexOf(',') > 0) {
                     var queries = [];
-                    timesheetids.indexOf(',').forEach((r) => {
+                    timesheetids.split(',').forEach((r) => {
                         queries = `
                         insert into timesheetcomments 
                             (comment, commentby, commentdate, viewcount, timesheetid)

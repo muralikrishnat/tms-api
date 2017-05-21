@@ -149,7 +149,7 @@ var isValidNewEmployee = (fields) => {
 }
 server.post('/employees', function (req, res, next) {
     req.params.loggedUser = req.loggedUser;
-    if (req.loggedUser.role.toUpperCase() === 'admin'.toUpperCase()) {
+    if (req.loggedUser) {
         if (isValidNewEmployee(req.params) || req.params.id) {
             db.addEmployee(req.params).then(({ err, result }) => {
                 res.send({ err, result });
@@ -166,7 +166,7 @@ server.post('/employees', function (req, res, next) {
 
 server.del('/employees', (req, res, next) => {
     req.params.loggedUser = req.loggedUser;
-    if (req.loggedUser.role.toUpperCase() === 'admin'.toUpperCase()) {
+    if (req.loggedUser) {
         if (req.params.id || req.query.id) {
             db.deleteEmployee(req.params.id || req.query.id).then(({ err, result }) => {
                 res.send({ err, result });
@@ -189,7 +189,7 @@ server.get('/projects', function (req, res, next) {
 
 server.post('/projects', function (req, res, next) {
     req.params.loggedUser = req.loggedUser;
-    if (req.loggedUser.role.toUpperCase() === 'admin'.toUpperCase()) {
+    if (req.loggedUser) {
         if (req.params.name || req.query.name) {
             db.addProject(req.params).then(({ err, result }) => {
                 res.send({ err, result: result });
@@ -206,7 +206,7 @@ server.post('/projects', function (req, res, next) {
 server.del('/projects', (req, res, next) => {
     if (req.loggedUser) {
         req.params.loggedUser = req.loggedUser;
-        if (req.loggedUser.role.toUpperCase() === 'admin'.toUpperCase()) {
+        if (req.loggedUser) {
             if (req.params.id || req.query.id) {
                 db.deleteProject({ id: (req.params.id || req.query.id), loggedUser: req.loggedUser }).then(({ err, result }) => {
                     res.send({ err, result });
@@ -332,7 +332,7 @@ server.post(urls.authenticate, function (req, res, next) {
 
 server.post('/allocations', (req, res, next) => {
     req.params.loggedUser = req.loggedUser;
-    if (req.loggedUser.role.toUpperCase() === 'admin'.toUpperCase()) {
+    if (req.loggedUser) {
         if (req.params.empid && req.params.projectid && req.params.role) {
             if (req.params.id) {
                 req.params.isUpdate = true;
@@ -353,7 +353,7 @@ server.post('/allocations', (req, res, next) => {
 
 server.del('/allocations', (req, res, next) => {
     req.params.loggedUser = req.loggedUser;
-    if (req.loggedUser.role.toUpperCase() === 'admin'.toUpperCase()) {
+    if (req.loggedUser) {
         if (req.params.id || req.query.id) {
             req.params.isRemove = true;
             req.params.id = req.params.id || req.query.id;
@@ -614,7 +614,8 @@ server.opts('/.*', (req, res, next) => {
     return next();
 });
 
-
+require('./db/log-manager').init(server, db);
+require('./db/project-submissions').init(server, db);
 
 
 var action;
