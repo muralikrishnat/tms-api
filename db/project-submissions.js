@@ -62,9 +62,8 @@ module.exports = {
             server.del(pathName, (req, res, next) => {
                 req.params.loggedUser = req.loggedUser;
                 if (req.loggedUser && (req.params.id || req.query.id)) {
-                    req.params.isdelete = true;
-                    req.params.id = req.params.id || req.query.id;
-                    var query = ' select * from projectsubmissions '
+                    let id = req.params.id || req.query.id;
+                    var query = ' delete from projectsubmissions where id=${id}'
                     executeQuery(db, res, query);
                 } else {
                     res.send({ err: 'Authentication required' });

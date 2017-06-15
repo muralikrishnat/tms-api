@@ -1,13 +1,61 @@
 module.exports = {
+    insertLog: function (db, logData) {
+        var executeQuery = function (db, query) {
+            db.checkAndConnect().then(({ err, client, done }) => {
+                if (!err) {
+                    client.query(query, (cErr, result) => {
+                        done();
+                    });
+                }
+            });
+        };
+        query = `
+            insert into logs 
+                (updateby, updateddate, tablename, actiontype, updateddata, updatinginfo)
+            values
+                ('${logData.empid}', now(), '${logData.tablename}', '${logData.actiontype}', '${logData.data}', '${logData.info}');
+        `;
+        executeQuery(db, query);
+    },
     init: function (server, db) {
         if (server && db) {
+            var executeQuery = function (db, res, query) {
+                db.checkAndConnect().then(({ err, client, done }) => {
+                    if (!err) {
+                        client.query(query, (cErr, result) => {
+                            done();
+                            if (!cErr) {
+                                res.send({ result: result.rows });
+                            } else {
+                                res.send({ err: { code: 2324, msg: 'query Issue', details: cErr } });
+                            }
+                        });
+                    } else {
+                        res.send({ err: { code: 2323, msg: 'Connection Issue', details: err } });
+                    }
+                });
+            };
             var pathName = '/logs'
             server.post(pathName, (req, res, next) => {
                 req.params.loggedUser = req.loggedUser;
                 if (req.loggedUser) {
-                    db.logs(req.params).then(({ err, result }) => {
-                        res.send({ err, result });
-                    });
+                    var query = '';
+                    var missingFields = false;
+                    if (req.params.id) {
+
+                    } else {
+                        query = `
+                            insert into logs 
+                                (updateby, updateddate, tablename, updateddata, updatinginfo)
+                            values
+                                (${req.loggedUser.empid}, now(), , now(), '${req.loggedUser.empid}');
+                        `;
+                    }
+                    if (missingFields) {
+                        res.send({ err: { code: 222, msg: 'required fields are missing' } });
+                    } else {
+                        executeQuery(db, res, query);
+                    }
                 } else {
                     res.send({ err: 'Authentication required' });
                 }
@@ -16,11 +64,11 @@ module.exports = {
             server.get(pathName, (req, res, next) => {
                 req.params.loggedUser = req.loggedUser;
                 if (req.loggedUser) {
-                    req.params.isget = true;
-                    req.params.query = req.query;
-                    db.logs(req.params).then(({ err, result }) => {
-                        res.send({ err, result });
-                    });
+                    var query = 'select * from logs '
+                    if (req.query.fromtime) {
+                        // query = query + ' where ';
+                    }
+                    executeQuery(db, res, query);
                 } else {
                     res.send({ err: 'Authentication required' });
                 }
@@ -30,10 +78,9 @@ module.exports = {
                 req.params.loggedUser = req.loggedUser;
                 if (req.loggedUser && (req.params.id || req.query.id)) {
                     req.params.isdelete = true;
-                    req.params.id = req.params.id || req.query.id;
-                    db.logs(req.params).then(({ err, result }) => {
-                        res.send({ err, result });
-                    });
+                    let id = req.params.id || req.query.id;
+                    var query = 'delete from logs where id=${id}';
+                    executeQuery(db, res, query);
                 } else {
                     res.send({ err: 'Authentication required' });
                 }

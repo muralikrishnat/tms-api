@@ -42,13 +42,12 @@ var isAuthenticatedToken = function (lToken, req) {
         return false;
     }
 };
-var checkAuthentication = true;
 var restify = require('restify');
 var lib = require('./lib');
 var db = require('./db');
 var config = {
     user: 'postgres',
-    database: 'EvokeDBDev',
+    database: 'evokedbdev',
     password: 'murali',
     host: 'localhost',
     port: 5432,
@@ -84,6 +83,7 @@ if (process.argv.length > 0) {
 }
 
 db.init(config);
+var logManager = require('./db/log-manager');
 
 var server = restify.createServer();
 server.use(restify.acceptParser(server.acceptable));
@@ -97,14 +97,29 @@ restify.CORS.ALLOW_HEADERS.push('authorization');
 server.pre(restify.CORS());
 server.use(restify.fullResponse());
 
-
+var getObjectExclude = (data, excludekeys) => {
+    var obj = {};
+    Object.keys(data).forEach(d => {
+        if (d != excludekeys) {
+            obj[d] = data[d];
+        }
+    });
+    return obj;
+};
 server.use(restify.authorizationParser());
 server.use(function (req, res, next) {
     console.log('[LOG]: ', req.method, req.url);
-    if (!checkAuthentication) {
-        next();
-    }
+
     if (req.url.indexOf('/authenticate') === 0 || req.url.indexOf('/forgotpassword') === 0 || req.url.indexOf('/dbquery') === 0) {
+        if (req.url.indexOf('/forgotpassword') === 0) {
+            logManager.insertLog(db, {
+                empid: '',
+                tablename: req.url,
+                actiontype: req.method,
+                data: JSON.stringify(getObjectExclude(req.params, 'loggedUser')),
+                info: ''
+            });
+        }
         next();
     } else {
         var lTokenValue;
@@ -124,6 +139,15 @@ server.use(function (req, res, next) {
         }
 
         if (lTokenValue && isAuthenticatedToken(lTokenValue, req)) {
+            if (req.method === 'POST' || req.method === 'DELETE') {
+                logManager.insertLog(db, {
+                    empid: req.params.loggedUser.empid,
+                    tablename: req.url,
+                    actiontype: req.method,
+                    data: JSON.stringify(getObjectExclude(req.params, 'loggedUser')),
+                    info: ''
+                });
+            }
             next();
         } else {
             next(new restify.UnauthorizedError({ body: { err: "Unauthorized", msg: "Unauthorized Error", version } }));

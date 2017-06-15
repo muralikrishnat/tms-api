@@ -62,7 +62,8 @@ create table employee (
     dob date,
     addedby character varying(150),
     addeddate date,
-    lastloggeddate timestamp with time zone
+    lastloggeddate timestamp with time zone,
+    logintime timestamp with time zone
 );
 
 
@@ -164,6 +165,7 @@ create table logs (
     updateby varchar(100),
     updateddate timestamp with time zone,
     tablename varchar(100),
+    actiontype varchar(10),
     updateddata text,
    	updatinginfo text
 );
