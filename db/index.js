@@ -297,12 +297,12 @@ module.exports = {
                 if (timesheetids && timesheetids.indexOf(',') > 0) {
                     var queries = [];
                     timesheetids.split(',').forEach((r) => {
-                        queries = `
-                        insert into timesheetcomments 
-                            (comment, commentby, commentdate, viewcount, timesheetid)
-                        values 
-                            ('${comment}', ${commentby}, now(), 0, ${r})
-                    `;
+                        queries.push(`
+                            insert into timesheetcomments 
+                                (comment, commentby, commentdate, viewcount, timesheetid)
+                            values 
+                                ('${comment}', ${commentby}, now(), 0, ${r})
+                        `);
                     });
                     queryToExecute = queries.join(';');
                 } else {
