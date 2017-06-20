@@ -22,7 +22,7 @@ let mailOptions = {
 
 // send mail with defined transport object
 
-var disableMail = true;
+var disableMail = false;
 
 module.exports = {
     sendMail: function (options) {
