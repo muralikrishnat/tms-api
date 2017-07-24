@@ -197,7 +197,9 @@ create table userpermissions (
 -- To Add root user in DB
 -- insert into employee (firstname, lastname, empid, password, emailid, reportingmanger, role)
 -- values ('root', 'root', '0', 'root', 'mtottimpudi', 0, 'admin');
+
 insert into employee (empid, firstname, lastname, doj, jobgrade, designation, practise, department, reportingmanger, emailid, password) values
+('000','root', 'root', '17-Nov-03', '', '', '', '', 0, '', 'root'),
 ( '2', 'Hari Babu', 'Madduluri', '17-Nov-03', 'C1', 'Associate Manager - SW', 'Java Practice', 'CSC', 1, 'hmadduluri@evoketechnologies.com', '12345' ),
 ( '12', 'Dayanand', 'Lingampally', '20-Mar-04', 'C1', 'Associate Manager - SW', 'Oracle Practice', 'Clopay', 738, 'dlingampally@evoketechnologies.com', '12345' ),
 ( '15', 'Venkata Srinivas', 'Surla', '14-Jul-04', 'B3', 'Team Lead', 'Delivery', 'CSC', 1, 'vsurla@evoketechnologies.com', '12345' ),
